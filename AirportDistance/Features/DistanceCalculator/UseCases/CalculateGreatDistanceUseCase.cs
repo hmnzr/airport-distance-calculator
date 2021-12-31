@@ -35,7 +35,7 @@ namespace AirportDistance.Features.DistanceCalculator.UseCases
 
         public async Task<DistanceInfo> Execute()
         {
-            var validationResult = _calculateDistanceDtoValidator.Validate(_dto);
+            var validationResult = await _calculateDistanceDtoValidator.ValidateAsync(_dto);
             if (!validationResult.IsValid)
             {
                 throw new ValidationException(validationResult.GetFormattedErrors());
