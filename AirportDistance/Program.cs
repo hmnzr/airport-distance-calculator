@@ -1,5 +1,7 @@
 using AirportDistance;
+using AirportDistance.Middlewares;
 using Carter;
+using FluentValidation.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +12,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddCarter();
 builder.Services.AddHttpClient();
 builder.Services.AddServiceComponents();
+builder.Services.AddFluentValidation();
 
 var app = builder.Build();
 
@@ -21,5 +24,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.MapCarter();
 app.Run();

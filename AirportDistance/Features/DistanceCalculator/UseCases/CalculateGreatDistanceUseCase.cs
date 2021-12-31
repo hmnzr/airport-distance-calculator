@@ -1,33 +1,50 @@
-﻿using AirportDistance.Features.DistanceCalculator.Models;
+﻿using AirportDistance.Exceptions;
+using AirportDistance.Features.DistanceCalculator.Dtos;
+using AirportDistance.Features.DistanceCalculator.Models;
 using AirportDistance.Features.DistanceCalculator.Services;
+using AirportDistance.Features.DistanceCalculator.Services.Interfaces;
+using AirportDistance.Features.DistanceCalculator.Validators;
+using Carter.ModelBinding;
 
 namespace AirportDistance.Features.DistanceCalculator.UseCases
 {
     public class CalculateGreatDistanceUseCase
     {
-        private readonly CTeleportClient _cTeleportClient;
+        private readonly ICTeleportClient _cTeleportClient;
         private readonly GreatCircleDistanceCalculator _calculator;
-        private string _fromIata;
-        private string _toIata;
+        private readonly CalculateDistanceDtoValidator _calculateDistanceDtoValidator;
 
-        public CalculateGreatDistanceUseCase(CTeleportClient client, GreatCircleDistanceCalculator calculator)
+        private CalculateDistanceDto _dto;
+
+        public CalculateGreatDistanceUseCase(
+            ICTeleportClient client,
+            GreatCircleDistanceCalculator calculator,
+            CalculateDistanceDtoValidator calculateDistanceDtoValidator)
         {
             _cTeleportClient = client;
             _calculator = calculator;
+            _calculateDistanceDtoValidator = calculateDistanceDtoValidator;
         }
 
-        public CalculateGreatDistanceUseCase WithParameters(string fromIata, string toIata)
+        public CalculateGreatDistanceUseCase WithParameters(CalculateDistanceDto dto)
         {
-            _fromIata = fromIata;
-            _toIata = toIata;
+            _dto = dto;
 
             return this;
         }
 
         public async Task<DistanceInfo> Execute()
         {
-            var fromAirport = await _cTeleportClient.GetAirportInfoAsync(_fromIata);
-            var toAirport = await _cTeleportClient.GetAirportInfoAsync(_toIata);
+            var validationResult = _calculateDistanceDtoValidator.Validate(_dto);
+            if (!validationResult.IsValid)
+            {
+                throw new ValidationException(validationResult.GetFormattedErrors());
+            }
+
+            var (from, to) = _dto;
+
+            var fromAirport = await _cTeleportClient.GetAirportInfoAsync(from);
+            var toAirport = await _cTeleportClient.GetAirportInfoAsync(to);
 
             var distance = _calculator.CalculateGreatCircleDistance(fromAirport.Location, toAirport.Location, DistanceUnit.Mile);
 

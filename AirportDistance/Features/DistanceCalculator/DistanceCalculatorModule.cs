@@ -15,10 +15,14 @@ namespace AirportDistance.Features.DistanceCalculator
                 .WithDisplayName("Calculates great circle distance between two airports based on their IATA code.");
         }
 
-        private async Task<IResult> CalculateGreatDistance(string from, string to, CalculateGreatDistanceUseCase useCase)
+        private async Task<IResult> CalculateGreatDistance(
+            string? from,
+            string? to,
+            CalculateGreatDistanceUseCase useCase)
         {
+            var dto = new CalculateDistanceDto(from, to);
             var distance = await useCase
-                .WithParameters(from, to)
+                .WithParameters(dto)
                 .Execute();
 
             return Results.Ok(distance);
